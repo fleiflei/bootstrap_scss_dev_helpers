@@ -1,0 +1,112 @@
+/*
+Bootstrap SCSS Development Helpers
+==================================
+
+Version: 1.0.0
+Requires: Bootstrap SCSS v5+
+Author: Florian Eickhorst
+Author URI: https://github.com/fleiflei
+License: GNU General Public License
+Description: A collection of handy mixins and functions for development with Bootstrap SCSS.
+*/
+
+// default values
+$dev-enable-breakpoint-indicator: false !default;
+$dev-enable-grid-view: false !default;
+$dev-enable-manual-indicators: false !default;
+
+$dev-breakpoint-indicator-transparency: 0.9 !default;
+$dev-grid-overlay-transparency: 0.3 !default;
+$dev-manual-indicators-transparency: 0.5 !default;
+
+$dev-grid-overlay-fluid-container: false !default;
+
+$dev-helper-z-index: 9999999999999 !default;
+
+& { // preferably include in body element
+
+  // some helper functions first
+  @function randBetween($min:100, $max:230) {
+    @return $min + floor(random() * (($max - $min) + 1));
+  }
+
+  @function randomColor($transparency) {
+    @return rgba(randBetween(), randBetween(), randBetween(), $transparency);
+  }
+
+  //  breakpoint indicator: displays a breakpoint indicator in the top left corner
+  @if ($dev-enable-breakpoint-indicator) {
+    &:after {
+      content: '';
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: $dev-helper-z-index;
+      color: white;
+      font-size: 15px;
+      padding: 10px;
+      text-align: center;
+      font-family: monospace;
+      font-weight: bold;
+      pointer-events: none;
+
+      @each $breakpoint, $resolution in $grid-breakpoints {
+        @include media-breakpoint-only($breakpoint) {
+          content: '#{$breakpoint}';
+          $randomColor: randomColor($dev-breakpoint-indicator-transparency);
+          background-color: $randomColor;
+          text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+        }
+      }
+    }
+  }
+
+  // grid view indicator
+  @if ($dev-enable-grid-view) {
+
+    /* Settings */
+    $grid-color: randomColor($dev-grid-overlay-transparency);
+
+    /* Helper variables */
+    $repeating-width: calc(100% / #{ $grid-columns});
+    $column-width: calc((100% / #{ $grid-columns}) - #{ $grid-gutter-width});
+    $background-columns: repeating-linear-gradient(
+        to right,
+        $grid-color,
+        $grid-color $column-width,
+        transparent $column-width,
+        transparent $repeating-width
+    );
+
+    &:before {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin-right: auto;
+      margin-left: auto;
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      content: '';
+      background-image: $background-columns;
+      background-size: 100% 100%;
+      background-position-x: $grid-gutter-width/2;
+      z-index: $dev-helper-z-index;
+      pointer-events: none;
+      @if ($dev-grid-overlay-fluid-container == false) {
+        @extend .container;
+        width: calc(100% - ($grid-gutter-width));
+      }
+    }
+  }
+
+  // Dev Manual Indicator: changes elements background-color for debugging purposes
+  @mixin dmi() {
+    @if ($dev-enable-manual-indicators) {
+      background-color: randomColor($dev-manual-indicators-transparency);
+    }
+  }
+}
